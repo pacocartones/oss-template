@@ -1,0 +1,35 @@
+name: Data or content correction
+description: A fact the project ships is wrong, outdated or missing its source.
+labels: [data]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for keeping this accurate. Please point to the **primary source** (the original author's own page or document), not a third-party summary.
+  - type: input
+    id: where
+    attributes:
+      label: Where is it?
+      description: The file, entry or page that holds the wrong fact.
+    validations:
+      required: true
+  - type: textarea
+    id: wrong
+    attributes:
+      label: What's wrong, and what is correct?
+      description: Quote the sentence from the source that supports the correction.
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Primary source
+      placeholder: "https://…"
+    validations:
+      required: true
+  - type: input
+    id: checked
+    attributes:
+      label: Day you checked it (UTC, YYYY-MM-DD)
+    validations:
+      required: true

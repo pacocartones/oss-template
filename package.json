@@ -1,0 +1,9 @@
+{
+  "name": "oss-template",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "check": "node scripts/check-repo.mjs"
+  }
+}

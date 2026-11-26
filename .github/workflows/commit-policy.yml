@@ -1,0 +1,22 @@
+name: Commit policy
+
+# Thin caller: the logic lives in pacocartones/.github (docs: its README, "commit-policy").
+# It checks only the new commits of a pull request: maintainer identity, no AI
+# attribution on maintainer commits, and branch names of in-repository branches.
+#
+# Pinning: @main is a placeholder that runs whatever is on main today. Replace it
+# with a full commit SHA, keeping the branch and date as a comment:
+#   git ls-remote https://github.com/pacocartones/.github refs/heads/main
+#   uses: pacocartones/.github/.github/workflows/commit-policy.yml@<40-char sha> # main YYYY-MM-DD
+# A SHA cannot move; take a newer one in a pull request so CI runs on it.
+on:
+  pull_request:
+
+permissions: {}
+
+jobs:
+  # The job id is part of the required check name "commit-policy / Commit policy" (scripts/bootstrap.sh).
+  commit-policy:
+    permissions:
+      contents: read
+    uses: pacocartones/.github/.github/workflows/commit-policy.yml@main

@@ -1,0 +1,22 @@
+name: Feature request
+description: A small improvement or new capability.
+labels: [feature]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a larger change (new structure, new dependency, several files), use the proposal form so the approach is agreed first.
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you need, and why?
+      description: Who it helps and what they cannot do today.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What would done look like?
+      description: A concrete result, an example, or the check that would prove it.
+    validations:
+      required: false

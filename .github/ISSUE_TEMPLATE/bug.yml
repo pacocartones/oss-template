@@ -1,0 +1,22 @@
+name: Bug report
+description: Something in the project is broken.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a wrong or outdated fact the project ships, use the data correction form instead. Security problems go through the Security tab, never here.
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Version and steps to reproduce
+      description: Release or commit, environment, the exact command or page, and a minimal public input. No secrets.
+      placeholder: "1. Run …  2. See …"
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What happens, and what did you expect?
+    validations:
+      required: true
