@@ -1,0 +1,24 @@
+name: Proposal
+description: Agree a larger change before implementing it.
+labels: [feature]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and proposed scope
+      description: Who needs this, which files or interfaces would change, and what is out of scope.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance and evidence
+      description: A concrete outcome and the check or example that proves it. Say whether it would change anything for existing users.
+    validations:
+      required: true

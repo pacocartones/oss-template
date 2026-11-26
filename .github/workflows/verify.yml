@@ -1,0 +1,24 @@
+name: Verify
+
+# Thin caller: the logic lives in pacocartones/.github (docs: its README, "verify").
+# No paths filter on pull_request: this is a required check, and a filtered-out
+# required check never reports, blocking the pull request forever.
+#
+# Pinning: @main is a placeholder that runs whatever is on main today. Replace it
+# with a full commit SHA, keeping the branch and date as a comment:
+#   git ls-remote https://github.com/pacocartones/.github refs/heads/main
+#   uses: pacocartones/.github/.github/workflows/verify.yml@<40-char sha> # main YYYY-MM-DD
+# A SHA cannot move; take a newer one in a pull request so CI runs on it.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  # The job id is part of the required check name "verify / Verify" (scripts/bootstrap.sh).
+  verify:
+    permissions:
+      contents: read
+    uses: pacocartones/.github/.github/workflows/verify.yml@main

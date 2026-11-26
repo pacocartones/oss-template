@@ -1,0 +1,9 @@
+# scripts/bootstrap.sh rewrites the template's repository name in these URLs to the new repository's.
+blank_issues_enabled: true
+contact_links:
+  - name: Find your first contribution
+    url: https://github.com/pacocartones/oss-template/blob/main/CONTRIBUTING.md#your-first-contribution
+    about: Pick an existing task, claim it, and find the checks to run.
+  - name: Report a security problem privately
+    url: https://github.com/pacocartones/oss-template/security/advisories/new
+    about: Never in a public issue. See SECURITY.md.
