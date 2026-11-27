@@ -1,0 +1,13 @@
+# Dependabot version updates. Every pull request is reviewed by hand; labels per the shared standard (labels v2).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels: ["dependencies"]
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels: ["dependencies"]

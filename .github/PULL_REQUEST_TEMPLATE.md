@@ -13,4 +13,4 @@
 - [ ] I ran the checks in CONTRIBUTING.md and the issue, and recorded the commands and results above.
 - [ ] **User-visible change:** I added a fragment in `changes/unreleased/` instead of editing `CHANGELOG.md`.
 - [ ] **Factual change:** every fact comes from a primary source I opened myself, linked above with the day I read it.
-- [ ] (Optional) I used AI tools for part of this change, and I have read and tested it myself.
+- [ ] (Optional) I used AI tools for part of this change, I have read and tested it myself, and I disclosed it with an `Assisted-by: <tool>/<model>` line (see AI_POLICY.md).
