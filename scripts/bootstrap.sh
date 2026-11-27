@@ -3,6 +3,7 @@
 # and again whenever you like: every step converges to the same state (idempotent).
 #
 # Usage: scripts/bootstrap.sh [--dry-run] [--repo owner/name] [--prune-labels] [--bot-app-id ID] [--own-forms]
+#                             [--check NAME]...
 #   --dry-run       print what would change; read-only calls only
 #   --repo          target repository (default: the current clone's GitHub repository)
 #   --prune-labels  delete labels missing from .github/labels.tsv, but only those on no issue or PR
@@ -12,6 +13,9 @@
 #                   .github/ISSUE_TEMPLATE/, for a repository that needs forms of its own.
 #                   Without it the repository has none and inherits them; with any form or
 #                   config.yml of its own, it inherits none of them.
+#   --check         a check the "main merge gate" requires, exactly as a pull request of the
+#                   repository shows it; repeat it for each check. Given once or more, it
+#                   replaces the template's four, for a repository whose workflows differ.
 #
 # Steps:
 #   1. rewrite the template's own name in package*.json; with --own-forms, copy the forms
@@ -28,7 +32,7 @@ set -uo pipefail
 TEMPLATE_REPO="pacocartones/oss-template"
 UPSTREAM_URL="https://github.com/pacocartones/.github"
 root="$(cd "$(dirname "$0")/.." && pwd)"
-dry=0; repo=""; prune=0; bot_app_id=""; own_forms=0
+dry=0; repo=""; prune=0; bot_app_id=""; own_forms=0; checks=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) dry=1 ;;
@@ -36,6 +40,7 @@ while [ $# -gt 0 ]; do
     --prune-labels) prune=1 ;;
     --bot-app-id) bot_app_id="${2:-}"; shift ;;
     --own-forms) own_forms=1 ;;
+    --check) [ -n "${2:-}" ] || { echo "--check needs a check name" >&2; exit 2; }; checks+=("$2"); shift ;;
     -h|--help) awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -145,6 +150,8 @@ say ""; say "== 3. Rulesets on the default branch"
 # source; scripts/bootstrap.test.mjs fails when it misses a pull request job of .github/workflows/.
 codeql_lang="$(sed -n 's/^ *language: *//p' "$root/.github/workflows/codeql.yml" | head -n 1)"
 required_checks=("verify / Verify" "commit-policy / Commit policy" "PR description" "codeql / Analyze (${codeql_lang:-javascript-typescript})")
+# --check replaces them, for a repository whose workflows name their checks differently.
+[ "${#checks[@]}" -eq 0 ] || required_checks=("${checks[@]}")
 
 integrity="$(jq -n '{
   name: "main integrity", target: "branch", enforcement: "active", bypass_actors: [],
