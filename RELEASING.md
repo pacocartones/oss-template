@@ -4,7 +4,7 @@ Merging a pull request is not releasing. Changes accumulate as [changelog fragme
 
 ## Rules
 
-1. **Changelog:** `CHANGELOG.md` follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/): newest release first under `## [Unreleased]`, one `## [X.Y.Z] - YYYY-MM-DD` heading per release, the sections of the [fragments README](changes/unreleased/README.md), and comparison links at the bottom.
+1. **Changelog:** `CHANGELOG.md` follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/): newest release first under `## [Unreleased]`, one `## [X.Y.Z] - YYYY-MM-DD` heading per release, the six groups Added, Changed, Deprecated, Removed, Fixed and Security, in that order, as in the [fragments README](changes/unreleased/README.md), and comparison links at the bottom.
 2. **Versioning:** [SemVer 2.0.0](https://semver.org/spec/v2.0.0.html). A change that breaks a user of the public interface is a major version; new features are minor; fixes and corrections are patch. In `0.x`, a minor version may break, and the notes say so.
 3. **Tags:** `vX.Y.Z`, annotated (`git tag -a`, never a lightweight tag, and never the one GitHub creates when a release names a new tag), never moved or deleted. Pre-releases are `vX.Y.Z-rc.N`, marked as pre-releases on GitHub.
 4. **Source:** only from `main`, with every check green, from the merge commit of the release pull request.
@@ -14,9 +14,9 @@ Merging a pull request is not releasing. Changes accumulate as [changelog fragme
 
 ## Steps
 
-1. From an up-to-date `main`, create a branch `chore/release-x-y-z`.
+1. From an up-to-date `main`, create a branch `release/vX.Y.Z` (for example `release/v1.4.0`), the standard's name for a release branch; the commit policy accepts it.
 2. In `CHANGELOG.md`, add `## [X.Y.Z] - YYYY-MM-DD` (UTC day) under `## [Unreleased]`, with a one-paragraph summary: what changes for users and whether they need to do anything. At the bottom, point `[Unreleased]` at `compare/vX.Y.Z...HEAD` and add `[X.Y.Z]: https://github.com/<owner>/<name>/compare/vPREVIOUS...vX.Y.Z` (`releases/tag/vX.Y.Z` for the first release).
-3. Move every fragment in `changes/unreleased/` (all files except `README.md`) under that heading: one block per section, in the order listed in the fragments README, entries from all fragments merged. Check each entry against the merged pull requests. Delete the moved fragments.
+3. Move every fragment in `changes/unreleased/` (all files except `README.md`) under that heading: one `###` block per Keep a Changelog group, in the order Added, Changed, Deprecated, Removed, Fixed, Security, with the entries of all fragments for that group merged and empty groups left out. Breaking changes stay under Changed or Removed with their `**BREAKING:**` line, and the summary paragraph names them. Check each entry against the merged pull requests. Delete the moved fragments.
 4. Bump the version wherever the project declares it (for example `npm version X.Y.Z --no-git-tag-version`).
 5. Run the checks, commit `chore(release): vX.Y.Z` and open the pull request.
 6. After it merges, tag the merge commit and publish the release on that tag, with the new changelog section as the notes:

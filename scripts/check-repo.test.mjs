@@ -115,7 +115,7 @@ test('2. issue forms: config.yml and non-YAML files are not forms', () => {
 
 test('3. fragments: a well-formed fragment passes, continuation lines and several sections included', () => {
   assert.deepEqual(check({
-    'changes/unreleased/fix-empty-input.md': '### Changed and fixed\n\n- An empty input file now gives\n  a clear error (#42).\n\n### Security\n\n- Pinned a dependency.\n',
+    'changes/unreleased/fix-empty-input.md': '### Fixed\n\n- An empty input file now gives\n  a clear error (#42).\n\n### Security\n\n- Pinned a dependency.\n',
     'changes/unreleased/.gitkeep': '',
   }), []);
 });
@@ -126,8 +126,17 @@ test('3. fragments: the file name is lowercase letters, digits and hyphens, endi
   }
 });
 
+test('3. fragments: each of the six Keep a Changelog groups is a section', () => {
+  for (const group of ['Added', 'Changed', 'Deprecated', 'Removed', 'Fixed', 'Security']) {
+    assert.deepEqual(check({ 'changes/unreleased/x.md': `### ${group}\n\n- x\n` }), [], group);
+  }
+  assert.deepEqual(check({ 'changes/unreleased/x.md': '### Changed\n\n- **BREAKING:** `--out` is now required.\n' }), []);
+});
+
 test('3. fragments: only the sections of the README', () => {
-  fails({ 'changes/unreleased/x.md': '### Fixed\n\n- x\n' }, /x\.md:1: unknown heading "### Fixed"/);
+  fails({ 'changes/unreleased/x.md': '### Breaking changes and upgrade\n\n- x\n' }, /x\.md:1: unknown heading "### Breaking changes and upgrade"/);
+  fails({ 'changes/unreleased/x.md': '### Changed and fixed\n\n- x\n' }, /unknown heading "### Changed and fixed"/);
+  fails({ 'changes/unreleased/x.md': '### Fixes\n\n- x\n' }, /unknown heading "### Fixes"/);
   fails({ 'changes/unreleased/x.md': '## Added\n\n- x\n' }, /unknown heading "## Added"/);
 });
 

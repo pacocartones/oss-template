@@ -1,0 +1,9 @@
+# actionlint configuration, read by `actionlint` (no workflow here runs it; run it locally or add it to CI).
+# cache-mode is a top-level workflow key that GitHub Actions added in September 2026;
+# actionlint v1.7.12 does not know it yet. Accept that one key in scorecard.yml only;
+# every other unknown key, there and elsewhere, is still an error. Remove this once
+# actionlint knows cache-mode. See https://github.com/ossf/scorecard-action#workflow-linters
+paths:
+  .github/workflows/scorecard.yml:
+    ignore:
+      - '^unexpected key "cache-mode" for "workflow" section\.'

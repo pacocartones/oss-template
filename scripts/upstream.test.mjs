@@ -2,7 +2,9 @@
 //   1. each reusable workflow exists at the pinned SHA, accepts the inputs its caller passes,
 //      and is named as scripts/bootstrap.sh's required check names say;
 //   2. every link to pacocartones/.github in this repository's files resolves on its main
-//      branch, #fragment included.
+//      branch, #fragment included;
+//   3. .github/workflows/scorecard.yml and .github/actionlint.yaml are pacocartones/.github's at
+//      the pinned SHA (actionlint.yaml with its first comment line rewritten for this repository).
 // It needs network access to github.com.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -77,4 +79,15 @@ test('2. every link to pacocartones/.github resolves on its main branch', () => 
     });
   }
   assert.ok(checked > 0, 'found the links');
+});
+
+test('3. scorecard.yml is the one pacocartones/.github ships at the pinned SHA', () => {
+  const upstream = show(PIN, '.github/workflows/scorecard.yml');
+  assert.ok(upstream, `.github/workflows/scorecard.yml does not exist at ${PIN}`);
+  assert.equal(readFileSync(join(WORKFLOWS, 'scorecard.yml'), 'utf8'), upstream, 'copy it again from the pinned SHA');
+  // The first line says where the file is read; the rest is upstream's.
+  const lint = show(PIN, '.github/actionlint.yaml');
+  assert.ok(lint, `.github/actionlint.yaml does not exist at ${PIN}`);
+  const rest = (text) => text.split('\n').slice(1).join('\n');
+  assert.equal(rest(readFileSync(join(ROOT, '.github/actionlint.yaml'), 'utf8')), rest(lint));
 });

@@ -2,18 +2,27 @@
 
 Each pull request with a change users would notice adds one file here, `changes/unreleased/<short-name>.md` (lowercase letters, digits and hyphens), so no two pull requests edit the same lines of `CHANGELOG.md`. Docs, tests and CI changes need none.
 
-A fragment uses the changelog's own format: one or more section headings, each followed by entries starting with `- ` (continuation lines indented by two spaces). The sections, in release order:
+A fragment uses the changelog's own format: one or more section headings, each followed by entries starting with `- ` (continuation lines indented by two spaces). The sections are the [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) groups, in release order:
 
-- `### Breaking changes and upgrade`
-- `### Added`
-- `### Changed and fixed`
-- `### Removed`
-- `### Security`
+- `### Added` for new features.
+- `### Changed` for changes in existing behaviour.
+- `### Deprecated` for features that will be removed.
+- `### Removed` for features removed now.
+- `### Fixed` for bug fixes.
+- `### Security` for vulnerabilities fixed.
+
+A breaking change has no section of its own: it goes under `### Changed` or `### Removed`, as an entry starting with `**BREAKING:**` that says what users must do to upgrade:
+
+```markdown
+### Changed
+
+- **BREAKING:** `--out` is now required; add it to your scripts (#51).
+```
 
 Example, `changes/unreleased/fix-empty-input.md`:
 
 ```markdown
-### Changed and fixed
+### Fixed
 
 - An empty input file now gives a clear error instead of a crash (#42).
 ```

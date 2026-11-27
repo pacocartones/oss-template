@@ -43,6 +43,7 @@ You need [`gh`](https://cli.github.com/) (logged in, admin on the new repository
 - **CI that tests the template itself.** `npm test` runs `scripts/bootstrap.sh` (dry run, real run and rerun) against a simulated fresh copy with a fake `gh`, so no repository is created and nothing is written to GitHub; it checks the plan covers every label in `.github/labels.tsv`, both rulesets and the required checks, and that a second run changes nothing. It also tests every rule of `scripts/check-repo.mjs`, and that links to `pacocartones/.github` and the pinned workflows resolve there.
 - **No agent attribution.** [`.claude/settings.json`](.claude/settings.json) sets empty commit and pull request attribution for Claude Code sessions.
 - **Commit policy** from `pacocartones/.github`, pinned to a SHA: maintainer identity, no AI trailers in maintainer commits, branch names; and no AI footer in a maintainer's pull request description, checked again when it is edited.
+- **OpenSSF Scorecard** on `main` (weekly, on pushes and on branch protection changes), copied from `pacocartones/.github` with its attribution ([THIRD_PARTY.md](THIRD_PARTY.md)). It is for public repositories only: a private repository deletes `.github/workflows/scorecard.yml` and `.github/actionlint.yaml`.
 - **One merge at a time.** The merge gate does not require branches to be up to date, so maintainers merge one pull request at a time ([CONTRIBUTING.md](CONTRIBUTING.md#review)).
 - **Generated files are never committed by hand** ([CONTRIBUTING.md](CONTRIBUTING.md#generated-files)).
 
@@ -63,7 +64,7 @@ Each fact is written once, in the file below; everything else links to it.
 | [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) | What a pull request reports |
 | [`changes/unreleased/README.md`](changes/unreleased/README.md) | The changelog fragment format |
 | [`RELEASING.md`](RELEASING.md) | SemVer, tags and how fragments become `CHANGELOG.md` |
-| [`.github/workflows/`](.github/workflows/) | Thin callers of `pacocartones/.github`; the logic and its options live there |
+| [`.github/workflows/`](.github/workflows/) | Thin callers of `pacocartones/.github`, where the logic and its options live; and `scorecard.yml`, a copy of its Scorecard workflow |
 | [`scripts/bootstrap.sh`](scripts/bootstrap.sh) | Repository settings, rulesets and the required check names |
 | [`scripts/check-repo.mjs`](scripts/check-repo.mjs) | `npm run check`: labels, the type and labels of any issue form of its own, fragments, changelog, the files every repository keeps (`MAINTAINERS.md`, `LICENSE`) and links within the repository stay consistent |
 | [`scripts/*.test.mjs`](scripts/) | `npm test`: the template's own tests (bootstrap, checks, workflow callers, `pacocartones/.github` links) |
