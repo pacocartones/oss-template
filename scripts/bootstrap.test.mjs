@@ -307,6 +307,21 @@ test('--bot-app-id lets the App bypass the merge gate only', () => {
   }
 });
 
+test('--check replaces the required checks of the merge gate, and only them', () => {
+  const box = sandbox();
+  try {
+    const r = box.run('--repo', NEW, '--check', 'verify / Verify', '--check', 'commit policy', '--check', 'verify (ubuntu-latest, 22)');
+    assert.equal(r.code, 0, r.out);
+    const gate = box.state().rulesets.find((x) => x.name === 'main merge gate');
+    const checks = gate.rules.find((x) => x.type === 'required_status_checks').parameters.required_status_checks.map((c) => c.context);
+    assert.deepEqual(checks, ['verify / Verify', 'commit policy', 'verify (ubuntu-latest, 22)']);
+    assert.ok(gate.rules.some((x) => x.type === 'pull_request'), 'the pull request rule stays');
+    assert.match(r.out, /required checks: "verify \/ Verify" "commit policy" "verify \(ubuntu-latest, 22\)" \n/);
+  } finally {
+    box.cleanup();
+  }
+});
+
 test('on the template itself, the template name is left alone', () => {
   const box = sandbox({ repo: TEMPLATE });
   try {
@@ -335,7 +350,7 @@ test('the pin is reported against pacocartones/.github main', () => {
 test('usage errors exit 2 before any call to gh', () => {
   const box = sandbox();
   try {
-    for (const args of [['--nope'], ['--repo', 'not a repo'], ['--repo', NEW, '--bot-app-id', 'abc'], ['--own-forms=yes']]) {
+    for (const args of [['--nope'], ['--repo', 'not a repo'], ['--repo', NEW, '--bot-app-id', 'abc'], ['--own-forms=yes'], ['--repo', NEW, '--check'], ['--repo', NEW, '--check', '']]) {
       const r = box.run(...args);
       assert.equal(r.code, 2, `${args.join(' ')}\n${r.out}`);
       assert.deepEqual(r.calls, []);

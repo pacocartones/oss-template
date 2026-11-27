@@ -28,6 +28,8 @@ You need [`gh`](https://cli.github.com/) (logged in, admin on the new repository
    Add `--prune-labels` to delete GitHub's default labels that are outside the standard (only unused ones are deleted).
 
    Add `--own-forms` only if the repository needs issue forms of its own: it copies the forms and `config.yml` of `pacocartones/.github` into `.github/ISSUE_TEMPLATE/` to edit there. Any form or `config.yml` in a repository turns off every inherited form, so the shared ones stop applying to it.
+
+   Add `--check NAME` once per check if the repository's workflows name their checks differently from the template's four. Use each name exactly as a pull request shows it, for example `--check 'verify / Verify' --check 'commit policy'`. A required check that no workflow produces blocks every merge.
 5. **Do the manual steps it prints**: move the reusable workflows' pinned SHA if `pacocartones/.github` has moved on, write the project's README, list the maintainers in `MAINTAINERS.md`, set the CodeQL language, add the project's checks to `package.json`, and a few settings.
 6. **Commit on a branch and open a pull request.** The four checks (verify, commit policy, PR description, CodeQL) must pass before it merges.
 
