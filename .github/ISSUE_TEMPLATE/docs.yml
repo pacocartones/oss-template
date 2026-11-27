@@ -1,0 +1,35 @@
+# Adapted from the GitHub Docs issue-form examples (github/docs commit df6faa2, CC BY 4.0,
+# https://creativecommons.org/licenses/by/4.0/) and vitejs/vite .github/ISSUE_TEMPLATE/docs.yml
+# (commit 7d0c054, MIT, Copyright (c) 2019-present, VoidZero Inc. and Vite contributors;
+# notice in THIRD_PARTY.md). Modified: type set to the account's Docs type instead of a label, Vite links removed.
+name: Documentation
+description: Suggest a change or a new page in the documentation.
+type: Docs
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this issue!
+  - type: checkboxes
+    id: documentation_is
+    attributes:
+      label: Documentation is
+      options:
+        - label: Missing
+        - label: Outdated
+        - label: Confusing
+        - label: Not sure?
+  - type: textarea
+    id: description
+    attributes:
+      label: Explain in Detail
+      description: A clear and concise description of your suggestion. If you intend to submit a PR for this issue, tell us in the description. Thanks!
+      placeholder: The description of ... page is not clear. I thought it meant ... but it wasn't.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Your Suggestion for Changes
+    validations:
+      required: true

@@ -187,7 +187,7 @@ else
 fi
 manual+=(
   "Replace README.md with the project's own, and set the repository description and topics."
-  "List the maintainers in GOVERNANCE.md, and set the CodeQL language in .github/workflows/codeql.yml (then rerun this script, which reads it)."
+  "List the maintainers in MAINTAINERS.md, and set the CodeQL language in .github/workflows/codeql.yml (then rerun this script, which reads it)."
   "Add the project's real checks to package.json: extend \"test\" (keep the template's scripts/*.test.mjs) and \"check\"."
   "Settings > Actions > General: workflow permissions 'Read repository contents', and leave 'Allow GitHub Actions to create and approve pull requests' off."
   "Settings > Advanced Security: keep CodeQL 'Default setup' off; the codeql.yml workflow is the advanced setup."
