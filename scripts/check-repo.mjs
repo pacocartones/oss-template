@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 // Repository consistency checks (`npm run check`), no dependencies:
 //   1. .github/labels.tsv is well formed;
-//   2. every label an issue form applies exists in .github/labels.tsv;
+//   2. issue forms: a repository normally has none and inherits those of pacocartones/.github;
+//      any form of its own sets `type:` to an issue type of the account (Task, Bug, Feature,
+//      Docs, Data) and applies only labels from .github/labels.tsv;
 //   3. changelog fragments in changes/unreleased/ follow its README;
 //   4. CHANGELOG.md keeps its [Unreleased] heading;
-//   5. every relative link in a Markdown file, and every link from an issue form to a file of
+//   5. the files a repository keeps of its own exist: MAINTAINERS.md and LICENSE;
+//   6. every relative link in a Markdown file, and every link from an issue form to a file of
 //      this repository, points to a file that exists and, with a #fragment, to a heading in it.
-//      Links to other sites are not fetched here; scripts/upstream.test.mjs checks the ones to
-//      pacocartones/.github.
+//      A link to a file the repository inherits instead (CODE_OF_CONDUCT.md, ...) says where it
+//      lives now. Links to other sites are not fetched here; scripts/upstream.test.mjs checks
+//      the ones to pacocartones/.github.
 // Usage: node scripts/check-repo.mjs [repository root, default: this checkout]
 // scripts/check-repo.test.mjs has a case for every rule.
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
@@ -19,6 +23,16 @@ const SECTIONS = new Set([
 ]);
 // Links that leave the repository on purpose: GitHub pages of the repository itself, written
 // relative to a file in its root (`../../issues?q=...`).
+const ISSUE_TYPES = new Set(['Task', 'Bug', 'Feature', 'Docs', 'Data']);
+const REQUIRED_FILES = ['MAINTAINERS.md', 'LICENSE'];
+const UPSTREAM = 'https://github.com/pacocartones/.github';
+// Files that pacocartones/.github publishes for every repository without its own; the template
+// ships none of them, so a relative link to one is a link to a removed file.
+const INHERITED = new Map([
+  ['CODE_OF_CONDUCT.md', `${UPSTREAM}/blob/main/CODE_OF_CONDUCT.md`],
+  ['SUPPORT.md', `${UPSTREAM}/blob/main/SUPPORT.md`],
+  ['.github/ISSUE_TEMPLATE', `${UPSTREAM}/tree/main/.github/ISSUE_TEMPLATE`],
+]);
 const GITHUB_ROUTE = /^\.\.\/\.\.\/(issues|pulls|discussions|security|actions|releases|labels|wiki)([/?#]|$)/;
 
 /** GitHub's heading anchors for a Markdown text: lowercase, punctuation dropped, spaces to hyphens, repeats numbered. */
@@ -81,13 +95,22 @@ export function checkRepo(root) {
     labels.add(name.toLowerCase());
   });
 
-  // 2. Issue forms: `labels: [a, b]` must name existing labels.
+  // 2. Issue forms of the repository's own, if any: a top-level `type:` naming an issue type, and
+  // `labels: [a, b]` (or a block list) naming existing labels. config.yml is not a form.
   const formDir = '.github/ISSUE_TEMPLATE';
-  const forms = readdirSync(join(root, formDir)).filter((f) => /\.ya?ml$/.test(f));
+  const forms = existsSync(join(root, formDir)) ? readdirSync(join(root, formDir)).filter((f) => /\.ya?ml$/.test(f)) : [];
+  const unquote = (v) => v.trim().replace(/^["']|["']$/g, '');
   for (const file of forms.filter((f) => f !== 'config.yml')) {
-    const match = read(`${formDir}/${file}`).match(/^labels:\s*\[(.*)\]\s*$/m);
-    for (const label of match ? match[1].split(',').map((l) => l.trim().replace(/^["']|["']$/g, '')).filter(Boolean) : []) {
-      if (!labels.has(label.toLowerCase())) errors.push(`${formDir}/${file}: label "${label}" is not in .github/labels.tsv`);
+    const where = `${formDir}/${file}`;
+    const text = read(where);
+    const type = text.match(/^type:[ \t]*(.*?)[ \t]*(?:#.*)?$/m);
+    if (!type || !unquote(type[1])) errors.push(`${where}: sets no type: (one of ${[...ISSUE_TYPES].join(', ')})`);
+    else if (!ISSUE_TYPES.has(unquote(type[1]))) errors.push(`${where}: type "${unquote(type[1])}" is not one of ${[...ISSUE_TYPES].join(', ')}`);
+    const flow = text.match(/^labels:[ \t]*\[(.*)\][ \t]*$/m);
+    const block = text.match(/^labels:[ \t]*\n((?:[ \t]+-.*\n?)+)/m);
+    const applied = flow ? flow[1].split(',') : block ? block[1].split('\n').map((l) => l.replace(/^\s*-/, '')) : [];
+    for (const label of applied.map(unquote).filter(Boolean)) {
+      if (!labels.has(label.toLowerCase())) errors.push(`${where}: label "${label}" is not in .github/labels.tsv`);
     }
   }
 
@@ -117,12 +140,18 @@ export function checkRepo(root) {
   // 4. Changelog.
   if (!/^## \[Unreleased\]$/m.test(read('CHANGELOG.md'))) errors.push('CHANGELOG.md: missing the "## [Unreleased]" heading');
 
-  // 5. Links within the repository.
+  // 5. Files of its own.
+  for (const file of REQUIRED_FILES) if (!existsSync(join(root, file))) errors.push(`${file}: missing; every repository keeps its own`);
+
+  // 6. Links within the repository.
   const anchorCache = new Map();
   /** Check one link target, relative to the root, from `where`; `fragment` without the #. */
   const checkTarget = (where, path, fragment) => {
     const abs = resolve(root, path);
-    if (!existsSync(abs)) return errors.push(`${where}: links to ${path}, which does not exist`);
+    if (!existsSync(abs)) {
+      const inherited = [...INHERITED].find(([p]) => path === p || path.startsWith(`${p}/`));
+      return errors.push(`${where}: links to ${path}, which does not exist${inherited ? `; it is inherited from pacocartones/.github, link to ${inherited[1]}` : ''}`);
+    }
     if (!fragment) return;
     if (statSync(abs).isDirectory() || !abs.endsWith('.md')) return errors.push(`${where}: links to #${fragment} in ${path}, which is not a Markdown file`);
     if (!anchorCache.has(abs)) anchorCache.set(abs, anchors(readFileSync(abs, 'utf8')));
@@ -148,10 +177,11 @@ export function checkRepo(root) {
     });
   }
   // Issue forms link to files of this repository by URL: https://github.com/<owner>/<repo>/blob/main/<path>.
+  // Links to pacocartones/.github (as in the forms copied from it) are files of that repository.
   for (const file of forms) {
     read(`${formDir}/${file}`).split('\n').forEach((line, i) => {
-      const m = line.match(/https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/(?:blob|tree)\/main\/([^\s#?'"]+)(?:#([^\s'"]+))?/);
-      if (m) checkTarget(`${formDir}/${file}:${i + 1}`, posix.normalize(m[1]), m[2]);
+      const m = line.match(/https:\/\/github\.com\/([^/\s]+\/[^/\s]+)\/(?:blob|tree)\/main\/([^\s#?'"]+)(?:#([^\s'"]+))?/);
+      if (m && m[1].toLowerCase() !== 'pacocartones/.github') checkTarget(`${formDir}/${file}:${i + 1}`, posix.normalize(m[2]), m[3]);
     });
   }
 

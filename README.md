@@ -1,6 +1,6 @@
 # oss-template
 
-The starting point for [@pacocartones](https://github.com/pacocartones)' open source repositories: policies, issue and pull request forms, the shared label standard, changelog fragments, and CI wired to the reusable workflows in [`pacocartones/.github`](https://github.com/pacocartones/.github). Distilled from [free-llm-api-hub](https://github.com/pacocartones/free-llm-api-hub).
+The starting point for [@pacocartones](https://github.com/pacocartones)' open source repositories: policies, the pull request form, the shared label standard, changelog fragments, and CI wired to the reusable workflows in [`pacocartones/.github`](https://github.com/pacocartones/.github). The issue forms and the Code of Conduct are not copied: GitHub shows those of [`pacocartones/.github`](https://github.com/pacocartones/.github#community-health-files) in every repository without its own ([GitHub Docs](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/creating-a-default-community-health-file)). Distilled from [free-llm-api-hub](https://github.com/pacocartones/free-llm-api-hub).
 
 ## New repository in 10 minutes
 
@@ -19,13 +19,15 @@ You need [`gh`](https://cli.github.com/) (logged in, admin on the new repository
    scripts/bootstrap.sh --dry-run
    ```
 
-4. **Run it.** It rewrites the template's name in the issue form links and `package.json`, syncs the labels, creates the rulesets *main integrity* (no deletion or force push, no bypass) and *main merge gate* (pull request, resolved conversations and the required checks; branches need not be up to date), and enables private vulnerability reporting, secret scanning, push protection and Dependabot security updates where the plan allows. Safe to rerun.
+4. **Run it.** It rewrites the template's name in `package.json`, syncs the labels, creates the rulesets *main integrity* (no deletion or force push, no bypass) and *main merge gate* (pull request, resolved conversations and the required checks; branches need not be up to date), and enables private vulnerability reporting, secret scanning, push protection and Dependabot security updates where the plan allows. Safe to rerun.
 
    ```bash
    scripts/bootstrap.sh
    ```
 
    Add `--prune-labels` to delete GitHub's default labels that are outside the standard (only unused ones are deleted).
+
+   Add `--own-forms` only if the repository needs issue forms of its own: it copies the forms and `config.yml` of `pacocartones/.github` into `.github/ISSUE_TEMPLATE/` to edit there. Any form or `config.yml` in a repository turns off every inherited form, so the shared ones stop applying to it.
 5. **Do the manual steps it prints**: move the reusable workflows' pinned SHA if `pacocartones/.github` has moved on, write the project's README, list the maintainers in `MAINTAINERS.md`, set the CodeQL language, add the project's checks to `package.json`, and a few settings.
 6. **Commit on a branch and open a pull request.** The four checks (verify, commit policy, PR description, CodeQL) must pass before it merges.
 
@@ -55,16 +57,15 @@ Each fact is written once, in the file below; everything else links to it.
 | [`GOVERNANCE.md`](GOVERNANCE.md) | How decisions are made |
 | [`MAINTAINERS.md`](MAINTAINERS.md) | Who the maintainers are |
 | [`SECURITY.md`](SECURITY.md) | Private reporting and scope |
-| [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | Expected behavior and enforcement |
 | [`LICENSE`](LICENSE) | MIT, copyright holder |
 | [`.github/labels.tsv`](.github/labels.tsv) | The shared label standard (labels v2: the kind of work is the issue type, not a label) |
-| [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/) | One form per issue type (Bug, Feature, Docs, Data, Task), each setting `type:` and no labels |
+| [`pacocartones/.github`](https://github.com/pacocartones/.github#community-health-files) | Inherited, not copied: the Code of Conduct, `SUPPORT.md` and the issue forms (one per issue type, each setting `type:`), unless a repository adds its own |
 | [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) | What a pull request reports |
 | [`changes/unreleased/README.md`](changes/unreleased/README.md) | The changelog fragment format |
 | [`RELEASING.md`](RELEASING.md) | SemVer, tags and how fragments become `CHANGELOG.md` |
 | [`.github/workflows/`](.github/workflows/) | Thin callers of `pacocartones/.github`; the logic and its options live there |
 | [`scripts/bootstrap.sh`](scripts/bootstrap.sh) | Repository settings, rulesets and the required check names |
-| [`scripts/check-repo.mjs`](scripts/check-repo.mjs) | `npm run check`: labels, issue form labels, fragments, changelog and links within the repository stay consistent |
+| [`scripts/check-repo.mjs`](scripts/check-repo.mjs) | `npm run check`: labels, the type and labels of any issue form of its own, fragments, changelog, the files every repository keeps (`MAINTAINERS.md`, `LICENSE`) and links within the repository stay consistent |
 | [`scripts/*.test.mjs`](scripts/) | `npm test`: the template's own tests (bootstrap, checks, workflow callers, `pacocartones/.github` links) |
 | [`.claude/settings.json`](.claude/settings.json) | Claude Code settings shared by everyone working here |
 
