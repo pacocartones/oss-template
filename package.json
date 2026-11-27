@@ -4,6 +4,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
+    "test": "node --test scripts/*.test.mjs",
     "check": "node scripts/check-repo.mjs"
   }
 }

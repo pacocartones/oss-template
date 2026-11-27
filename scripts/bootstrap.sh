@@ -47,10 +47,13 @@ manual=()
 say() { printf '%s\n' "$*"; }
 warn() { printf 'WARN  %s\n' "$*"; status=1; }
 # do_it <description> <command...>: run it, or only print it with --dry-run.
+# The command reads $DO_INPUT on stdin (empty by default), never the caller's stdin:
+# inside the label loop that is .github/labels.tsv. Pass a request body as
+# DO_INPUT="$body" do_it ...
 do_it() {
   local what="$1"; shift
   if [ "$dry" -eq 1 ]; then say "plan  $what"; return 0; fi
-  if "$@" </dev/null >/dev/null; then say "done  $what"; else warn "failed: $what"; return 1; fi
+  if "$@" <<<"${DO_INPUT:-}" >/dev/null; then say "done  $what"; else warn "failed: $what"; return 1; fi
 }
 
 say "Repository: $repo$([ "$dry" -eq 1 ] && echo ' (dry run: nothing changes)')"
@@ -111,10 +114,11 @@ fi
 
 # 3. Rulesets -----------------------------------------------------------------
 say ""; say "== 3. Rulesets on the default branch"
-# Required checks are "<caller job id> / <reusable job name>" from .github/workflows/.
-# This list is their single source; keep it in step with the caller job ids.
+# Required checks are "<caller job id> / <reusable job name>" for the jobs that call
+# pacocartones/.github, and the job name for a job of its own. This list is their single
+# source; scripts/bootstrap.test.mjs fails when it misses a pull request job of .github/workflows/.
 codeql_lang="$(sed -n 's/^ *language: *//p' "$root/.github/workflows/codeql.yml" | head -n 1)"
-required_checks=("verify / Verify" "commit-policy / Commit policy" "codeql / Analyze (${codeql_lang:-javascript-typescript})")
+required_checks=("verify / Verify" "commit-policy / Commit policy" "PR description" "codeql / Analyze (${codeql_lang:-javascript-typescript})")
 
 integrity="$(jq -n '{
   name: "main integrity", target: "branch", enforcement: "active", bypass_actors: [],
@@ -141,9 +145,9 @@ if existing="$(gh api "repos/$repo/rulesets?includes_parents=false" 2>/dev/null)
     rname="$(jq -r .name <<<"$body")"
     id="$(jq -r --arg n "$rname" '[.[] | select(.name == $n)][0].id // empty' <<<"$existing")"
     if [ -n "$id" ]; then
-      do_it "update ruleset '$rname' (id $id)" gh api -X PUT "repos/$repo/rulesets/$id" --input - <<<"$body"
+      DO_INPUT="$body" do_it "update ruleset '$rname' (id $id)" gh api -X PUT "repos/$repo/rulesets/$id" --input -
     else
-      do_it "create ruleset '$rname'" gh api -X POST "repos/$repo/rulesets" --input - <<<"$body"
+      DO_INPUT="$body" do_it "create ruleset '$rname'" gh api -X POST "repos/$repo/rulesets" --input -
     fi
   done
   say "      required checks: $(printf '"%s" ' "${required_checks[@]}")"
@@ -175,11 +179,16 @@ security "Dependabot security updates" PUT "repos/$repo/automated-security-fixes
 # 5. Manual steps -------------------------------------------------------------
 say ""; say "== 5. Remaining manual steps"
 sha="$(git ls-remote https://github.com/pacocartones/.github refs/heads/main 2>/dev/null | cut -f1)"
+pinned="$(sed -n 's#^ *uses: pacocartones/\.github/\.github/workflows/[^@]*@\([0-9a-f]\{40\}\).*#\1#p' "$root"/.github/workflows/*.yml | sort -u | tr '\n' ' ')"
+if [ -n "$sha" ] && [ "${pinned% }" = "$sha" ]; then
+  say "ok    the reusable workflows are pinned to pacocartones/.github main ($sha)"
+else
+  manual+=("The reusable workflows in .github/workflows/*.yml are pinned to ${pinned:-no SHA }and pacocartones/.github main is ${sha:-unknown (cannot reach it)}; move the pin in a pull request when they differ (see the comment at the top of each file).")
+fi
 manual+=(
-  "Pin the reusable workflows in .github/workflows/*.yml to a SHA instead of @main${sha:+ (main is $sha today)}; see the comment at the top of each file."
   "Replace README.md with the project's own, and set the repository description and topics."
   "List the maintainers in GOVERNANCE.md, and set the CodeQL language in .github/workflows/codeql.yml (then rerun this script, which reads it)."
-  "Add the project's real checks to package.json (\"test\", and extend \"check\")."
+  "Add the project's real checks to package.json: extend \"test\" (keep the template's scripts/*.test.mjs) and \"check\"."
   "Settings > Actions > General: workflow permissions 'Read repository contents', and leave 'Allow GitHub Actions to create and approve pull requests' off."
   "Settings > Advanced Security: keep CodeQL 'Default setup' off; the codeql.yml workflow is the advanced setup."
   "Settings > General: allow squash merging only, and 'Automatically delete head branches'."
