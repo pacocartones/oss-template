@@ -26,8 +26,8 @@ You need [`gh`](https://cli.github.com/) (logged in, admin on the new repository
    ```
 
    Add `--prune-labels` to delete GitHub's default labels that are outside the standard (only unused ones are deleted).
-5. **Do the manual steps it prints**: pin the reusable workflows to a SHA, write the project's README, list the maintainers in `GOVERNANCE.md`, set the CodeQL language, add the project's checks to `package.json`, and a few settings.
-6. **Commit on a branch and open a pull request.** The three checks (verify, commit policy, CodeQL) must pass before it merges.
+5. **Do the manual steps it prints**: move the reusable workflows' pinned SHA if `pacocartones/.github` has moved on, write the project's README, list the maintainers in `GOVERNANCE.md`, set the CodeQL language, add the project's checks to `package.json`, and a few settings.
+6. **Commit on a branch and open a pull request.** The four checks (verify, commit policy, PR description, CodeQL) must pass before it merges.
 
    ```bash
    git switch -c chore/bootstrap
@@ -35,6 +35,14 @@ You need [`gh`](https://cli.github.com/) (logged in, admin on the new repository
    git push -u origin chore/bootstrap
    gh pr create --fill
    ```
+
+## What you get
+
+- **CI that tests the template itself.** `npm test` runs `scripts/bootstrap.sh` (dry run, real run and rerun) against a simulated fresh copy with a fake `gh`, so no repository is created and nothing is written to GitHub; it checks the plan covers every label in `.github/labels.tsv`, both rulesets and the required checks, and that a second run changes nothing. It also tests every rule of `scripts/check-repo.mjs`, and that links to `pacocartones/.github` and the pinned workflows resolve there.
+- **No agent attribution.** [`.claude/settings.json`](.claude/settings.json) sets empty commit and pull request attribution for Claude Code sessions.
+- **Commit policy** from `pacocartones/.github`, pinned to a SHA: maintainer identity, no AI trailers in maintainer commits, branch names; and no AI footer in a maintainer's pull request description, checked again when it is edited.
+- **One merge at a time.** The merge gate does not require branches to be up to date, so maintainers merge one pull request at a time ([CONTRIBUTING.md](CONTRIBUTING.md#review)).
+- **Generated files are never committed by hand** ([CONTRIBUTING.md](CONTRIBUTING.md#generated-files)).
 
 ## What's inside, and where each rule lives
 
@@ -55,7 +63,9 @@ Each fact is written once, in the file below; everything else links to it.
 | [`RELEASING.md`](RELEASING.md) | SemVer, tags and how fragments become `CHANGELOG.md` |
 | [`.github/workflows/`](.github/workflows/) | Thin callers of `pacocartones/.github`; the logic and its options live there |
 | [`scripts/bootstrap.sh`](scripts/bootstrap.sh) | Repository settings, rulesets and the required check names |
-| [`scripts/check-repo.mjs`](scripts/check-repo.mjs) | `npm run check`: labels, issue form labels, fragments and changelog stay consistent |
+| [`scripts/check-repo.mjs`](scripts/check-repo.mjs) | `npm run check`: labels, issue form labels, fragments, changelog and links within the repository stay consistent |
+| [`scripts/*.test.mjs`](scripts/) | `npm test`: the template's own tests (bootstrap, checks, workflow callers, `pacocartones/.github` links) |
+| [`.claude/settings.json`](.claude/settings.json) | Claude Code settings shared by everyone working here |
 
 ## Changing the template
 

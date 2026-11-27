@@ -4,11 +4,10 @@ name: Verify
 # No paths filter on pull_request: this is a required check, and a filtered-out
 # required check never reports, blocking the pull request forever.
 #
-# Pinning: @main is a placeholder that runs whatever is on main today. Replace it
-# with a full commit SHA, keeping the branch and date as a comment:
+# Pinning: a full commit SHA of pacocartones/.github, with the branch and the day it was
+# read as a comment. All three callers use the same SHA (scripts/workflows.test.mjs).
+# A SHA cannot move; to take a newer one, in a pull request so CI runs on it:
 #   git ls-remote https://github.com/pacocartones/.github refs/heads/main
-#   uses: pacocartones/.github/.github/workflows/verify.yml@<40-char sha> # main YYYY-MM-DD
-# A SHA cannot move; take a newer one in a pull request so CI runs on it.
 on:
   pull_request:
   push:
@@ -21,4 +20,4 @@ jobs:
   verify:
     permissions:
       contents: read
-    uses: pacocartones/.github/.github/workflows/verify.yml@main
+    uses: pacocartones/.github/.github/workflows/verify.yml@df9998c0cce73d34b42a10062a803240b6937f9b # main 2026-11-27

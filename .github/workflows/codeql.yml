@@ -5,11 +5,10 @@ name: CodeQL
 # Set `language` to the project's language (javascript-typescript, python, actions, ...);
 # it is part of the required check name, so rerun scripts/bootstrap.sh after changing it.
 #
-# Pinning: @main is a placeholder that runs whatever is on main today. Replace it
-# with a full commit SHA, keeping the branch and date as a comment:
+# Pinning: a full commit SHA of pacocartones/.github, with the branch and the day it was
+# read as a comment. All three callers use the same SHA (scripts/workflows.test.mjs).
+# A SHA cannot move; to take a newer one, in a pull request so CI runs on it:
 #   git ls-remote https://github.com/pacocartones/.github refs/heads/main
-#   uses: pacocartones/.github/.github/workflows/codeql.yml@<40-char sha> # main YYYY-MM-DD
-# A SHA cannot move; take a newer one in a pull request so CI runs on it.
 on:
   pull_request:
   schedule:
@@ -25,6 +24,6 @@ jobs:
       security-events: write
       actions: read
       contents: read
-    uses: pacocartones/.github/.github/workflows/codeql.yml@main
+    uses: pacocartones/.github/.github/workflows/codeql.yml@df9998c0cce73d34b42a10062a803240b6937f9b # main 2026-11-27
     with:
       language: javascript-typescript
