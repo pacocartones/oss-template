@@ -18,8 +18,9 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, posix, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+// The Keep a Changelog 1.1.0 groups, in release order (changes/unreleased/README.md).
 const SECTIONS = new Set([
-  '### Breaking changes and upgrade', '### Added', '### Changed and fixed', '### Removed', '### Security',
+  '### Added', '### Changed', '### Deprecated', '### Removed', '### Fixed', '### Security',
 ]);
 // Links that leave the repository on purpose: GitHub pages of the repository itself, written
 // relative to a file in its root (`../../issues?q=...`).
