@@ -10,7 +10,7 @@ Report it privately through the repository's **Security** tab: **Report a vulner
 - how to reproduce it, and what an attacker could do with it;
 - any fix or mitigation you suggest.
 
-You should get a first answer within a week (best effort). Once the issue is confirmed, a fix is prepared in private and a security advisory is published with credit to you, unless you prefer to stay anonymous.
+You should get a first answer within 3 working days (best effort). Once the issue is confirmed, a fix is prepared in private and a security advisory is published with credit to you, unless you prefer to stay anonymous.
 
 ## Supported versions
 
