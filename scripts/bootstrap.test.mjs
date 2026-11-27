@@ -103,6 +103,8 @@ function workflowChecks() {
   for (const file of readdirSync(dir).filter((f) => /\.ya?ml$/.test(f))) {
     const text = readFileSync(join(dir, file), 'utf8');
     if (!/^on:\n(?: .*\n|#.*\n|\n)*? {2}pull_request:/m.test(text)) continue;
+    // ai-footer.yml cleans text after it is posted and is never a gate, so it is not a required check.
+    if (text.includes('/ai-footer-strip.yml@')) continue;
     const jobs = text.slice(text.search(/^jobs:/m)).split(/\n(?= {2}[\w-]+:\s*$)/m).slice(1);
     for (const job of jobs) {
       const id = job.match(/^ {2}([\w-]+):/)[1];

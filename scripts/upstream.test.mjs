@@ -44,7 +44,8 @@ test('1. each pinned reusable workflow exists, takes its inputs, and matches the
   const language = readFileSync(join(WORKFLOWS, 'codeql.yml'), 'utf8').match(/^ *language: *(\S+)/m)[1];
   const required = [...bootstrap.match(/^required_checks=\((.*)\)$/m)[1].matchAll(/"([^"]+)"/g)]
     .map((m) => m[1].replace(/\$\{codeql_lang:-[^}]*\}/, language));
-  for (const { file, text } of callers) {
+  // ai-footer.yml cleans text after the fact and is never a gate, so it is not a required check.
+  for (const { file, text } of callers.filter((c) => !c.text.includes('/ai-footer-strip.yml@'))) {
     const [, id, path] = text.match(/^ {2}([\w-]+):\s*\n(?: {4}.*\n|\s*#.*\n)*? {4}uses: pacocartones\/\.github\/(\.github\/workflows\/[\w-]+\.yml)@/m);
     const upstream = show(PIN, path);
     assert.ok(upstream, `${file}: ${path} does not exist at ${PIN}`);
