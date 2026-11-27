@@ -24,6 +24,6 @@ jobs:
       security-events: write
       actions: read
       contents: read
-    uses: pacocartones/.github/.github/workflows/codeql.yml@df9998c0cce73d34b42a10062a803240b6937f9b # main 2026-11-27
+    uses: pacocartones/.github/.github/workflows/codeql.yml@e20cca0c67a96b235ef38db8bb058b7811a1fb3e # main 2026-11-27
     with:
       language: javascript-typescript
