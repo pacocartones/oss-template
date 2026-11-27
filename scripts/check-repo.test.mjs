@@ -10,17 +10,24 @@ import { anchors, checkRepo } from './check-repo.mjs';
 
 const SCRIPT = join(import.meta.dirname, 'check-repo.mjs');
 
-/** The smallest repository that passes every check. */
+/** The smallest repository that passes every check: like the template, it has no issue forms and inherits them. */
 const BASE = {
   '.github/labels.tsv': '# name\tcolor\tdescription\nbug\td73a4a\tSomething isn\'t working\n\ngood first issue\t7057ff\tGood for newcomers\n',
-  '.github/ISSUE_TEMPLATE/bug.yml': 'name: Bug\nlabels: [bug]\nbody: []\n',
-  '.github/ISSUE_TEMPLATE/config.yml':
-    'contact_links:\n  - url: https://github.com/someone/repo/blob/main/CONTRIBUTING.md#your-first-contribution\n  - url: https://github.com/someone/repo/security/advisories/new\n',
+  'LICENSE': 'MIT License\n',
+  'MAINTAINERS.md': '# Maintainers\n',
   'changes/unreleased/README.md': '# Changelog fragments\n\nSee [RELEASING](../../RELEASING.md).\n',
   'CHANGELOG.md': '# Changelog\n\n## [Unreleased]\n',
   'CONTRIBUTING.md': '# Contributing\n\n## Your first contribution\n\nPick an [issue](../../issues?q=is%3Aopen) and read [below](#claiming-an-issue).\n\n## Claiming an issue\n',
   'RELEASING.md': '# Releasing\n',
-  'README.md': '# Repo\n\n[Contributing](CONTRIBUTING.md#claiming-an-issue), [labels](.github/labels.tsv), [forms](.github/ISSUE_TEMPLATE/), [site](https://example.com/missing).\n',
+  'README.md': '# Repo\n\n[Contributing](CONTRIBUTING.md#claiming-an-issue), [labels](.github/labels.tsv), [changes](changes/unreleased/), [site](https://example.com/missing).\n',
+};
+
+/** Issue forms of a repository's own, as `scripts/bootstrap.sh --own-forms` copies them. */
+const FORMS = {
+  '.github/ISSUE_TEMPLATE/bug.yml': 'name: Bug\ntype: Bug\nlabels: [bug]\nbody: []\n',
+  '.github/ISSUE_TEMPLATE/config.yml':
+    'contact_links:\n  - url: https://github.com/someone/repo/blob/main/CONTRIBUTING.md#your-first-contribution\n  - url: https://github.com/someone/repo/security/advisories/new\n'
+    + '  - url: https://github.com/pacocartones/.github/blob/main/SUPPORT.md\n',
 };
 
 /** Errors of checkRepo on BASE with `changes` applied (a null value deletes the file). */
@@ -75,18 +82,35 @@ test('1. labels.tsv: comments and blank lines are skipped', () => {
   assert.deepEqual(check({ '.github/labels.tsv': '# a comment\twith\ttabs\tand more\n\nbug\td73a4a\tx\n' }), []);
 });
 
-test('2. issue forms: every applied label is in labels.tsv, ignoring case and quotes', () => {
-  fails({ '.github/ISSUE_TEMPLATE/bug.yml': 'labels: [bug, triage]\n' }, /bug\.yml: label "triage" is not in \.github\/labels\.tsv/);
-  fails({ '.github/ISSUE_TEMPLATE/idea.yaml': 'labels: ["nope"]\n' }, /idea\.yaml: label "nope"/);
-  assert.deepEqual(check({ '.github/ISSUE_TEMPLATE/bug.yml': 'labels: ["Bug", \'good first issue\']\n' }), []);
+test('2. issue forms: none of its own passes (they are inherited), and so do well-formed ones', () => {
+  assert.deepEqual(check(), []);
+  assert.deepEqual(check(FORMS), []);
+  assert.deepEqual(check({ '.github/ISSUE_TEMPLATE/config.yml': 'blank_issues_enabled: false\n' }), []);
 });
 
-test('2. issue forms: a form without labels, config.yml and non-YAML files are not checked for labels', () => {
+test('2. issue forms: every form sets type: to an issue type of the account', () => {
+  for (const type of ['Task', 'Bug', 'Feature', 'Docs', 'Data', '"Docs"', "'Data'", 'Bug # the account type']) {
+    assert.deepEqual(check({ '.github/ISSUE_TEMPLATE/x.yml': `name: X\ntype: ${type}\nbody: []\n` }), [], type);
+  }
+  fails({ '.github/ISSUE_TEMPLATE/x.yml': 'name: X\nbody:\n  - type: textarea\n' }, /x\.yml: sets no type: \(one of Task, Bug, Feature, Docs, Data\)/);
+  fails({ '.github/ISSUE_TEMPLATE/x.yml': 'name: X\ntype:\nbody: []\n' }, /x\.yml: sets no type:/);
+  fails({ '.github/ISSUE_TEMPLATE/x.yaml': 'name: X\ntype: Question\n' }, /x\.yaml: type "Question" is not one of Task, Bug, Feature, Docs, Data/);
+  fails({ '.github/ISSUE_TEMPLATE/x.yml': 'name: X\ntype: bug\n' }, /type "bug" is not one of/);
+});
+
+test('2. issue forms: every applied label is in labels.tsv, ignoring case and quotes', () => {
+  fails({ ...FORMS, '.github/ISSUE_TEMPLATE/bug.yml': 'type: Bug\nlabels: [bug, triage]\n' }, /bug\.yml: label "triage" is not in \.github\/labels\.tsv/);
+  fails({ '.github/ISSUE_TEMPLATE/idea.yaml': 'type: Feature\nlabels: ["nope"]\n' }, /idea\.yaml: label "nope"/);
+  fails({ '.github/ISSUE_TEMPLATE/idea.yml': 'type: Feature\nlabels:\n  - bug\n  - "enhancement"\nbody: []\n' }, /idea\.yml: label "enhancement"/);
+  assert.deepEqual(check({ '.github/ISSUE_TEMPLATE/bug.yml': 'type: Bug\nlabels: ["Bug", \'good first issue\']\n' }), []);
+});
+
+test('2. issue forms: config.yml and non-YAML files are not forms', () => {
   assert.deepEqual(check({
-    '.github/ISSUE_TEMPLATE/plain.yml': 'name: Plain\nbody: []\n',
+    ...FORMS,
     '.github/ISSUE_TEMPLATE/notes.txt': 'labels: [nope]\n',
+    '.github/ISSUE_TEMPLATE/config.yml': 'labels: [nope]\n',
   }), []);
-  assert.deepEqual(check({ '.github/ISSUE_TEMPLATE/config.yml': 'labels: [nope]\n' }), []);
 });
 
 test('3. fragments: a well-formed fragment passes, continuation lines and several sections included', () => {
@@ -126,38 +150,56 @@ test('4. CHANGELOG.md keeps its "## [Unreleased]" heading', () => {
   fails({ 'CHANGELOG.md': '# Changelog\n\n## Unreleased\n' }, /CHANGELOG\.md: missing the "## \[Unreleased\]" heading/);
 });
 
-test('5. links: a relative link to a missing file fails, with file and line', () => {
+test('5. MAINTAINERS.md and LICENSE exist', () => {
+  fails({ 'MAINTAINERS.md': null }, /^MAINTAINERS\.md: missing; every repository keeps its own$/);
+  fails({ LICENSE: null }, /^LICENSE: missing/);
+});
+
+test('6. links: a relative link to a missing file fails, with file and line', () => {
   fails({ 'README.md': '# Repo\n\nSee [policy](POLICY.md).\n' }, /^README\.md:3: links to POLICY\.md, which does not exist$/);
   fails({ 'docs/guide.md': '[up](../MISSING.md)\n' }, /docs\/guide\.md:1: links to MISSING\.md/);
 });
 
-test('5. links: links resolve from the linking file, directories and query strings included', () => {
-  assert.deepEqual(check({ 'docs/guide.md': '[readme](../README.md) [forms](../.github/ISSUE_TEMPLATE) [q](../README.md?plain=1)\n' }), []);
+test('6. links: a relative link to a file the repository inherits fails, and says where it lives now', () => {
+  fails({ 'CONTRIBUTING.md': '# Contributing\n\n## Your first contribution\n\n## Claiming an issue\n\nFollow the [Code of Conduct](CODE_OF_CONDUCT.md).\n' },
+    /^CONTRIBUTING\.md:7: links to CODE_OF_CONDUCT\.md, which does not exist; it is inherited from pacocartones\/\.github, link to https:\/\/github\.com\/pacocartones\/\.github\/blob\/main\/CODE_OF_CONDUCT\.md$/);
+  fails({ 'docs/guide.md': '[forms](../.github/ISSUE_TEMPLATE/)\n' }, /docs\/guide\.md:1: links to \.github\/ISSUE_TEMPLATE, which does not exist; it is inherited .*tree\/main\/\.github\/ISSUE_TEMPLATE$/);
+  fails({ 'docs/guide.md': '[bug](../.github/ISSUE_TEMPLATE/bug.yml)\n' }, /links to \.github\/ISSUE_TEMPLATE\/bug\.yml, which does not exist; it is inherited/);
+  fails({ 'README.md': '# Repo\n\n[support](SUPPORT.md)\n' }, /links to SUPPORT\.md, which does not exist; it is inherited .*blob\/main\/SUPPORT\.md$/);
+  // An inherited link to pacocartones/.github is fine; so is a copy of its own.
+  assert.deepEqual(check({ 'README.md': '# Repo\n\n[conduct](https://github.com/pacocartones/.github/blob/main/CODE_OF_CONDUCT.md)\n' }), []);
+  assert.deepEqual(check({ 'SUPPORT.md': '# Support\n', 'README.md': '# Repo\n\n[support](SUPPORT.md)\n' }), []);
 });
 
-test('5. links: a #fragment must match a heading, in the same file or another', () => {
+test('6. links: links resolve from the linking file, directories and query strings included', () => {
+  assert.deepEqual(check({ 'docs/guide.md': '[readme](../README.md) [changes](../changes/unreleased) [q](../README.md?plain=1)\n' }), []);
+});
+
+test('6. links: a #fragment must match a heading, in the same file or another', () => {
   fails({ 'README.md': '# Repo\n\n[x](CONTRIBUTING.md#claiming)\n' }, /README\.md:3: CONTRIBUTING\.md has no heading for #claiming/);
   fails({ 'README.md': '# Repo\n\n[x](#nowhere)\n' }, /README\.md:3: README\.md has no heading for #nowhere/);
   fails({ 'README.md': '# Repo\n\n[x](RELEASING.md#releasing)\n[y](.github/labels.tsv#L2)\n' }, /links to #L2 in \.github\/labels\.tsv, which is not a Markdown file/);
 });
 
-test('5. links: leaving the repository is only allowed for its own GitHub pages from the root', () => {
+test('6. links: leaving the repository is only allowed for its own GitHub pages from the root', () => {
   fails({ 'README.md': '# Repo\n\n[x](../other-repo/README.md)\n' }, /links to \.\.\/other-repo\/README\.md, outside the repository/);
   fails({ 'docs/guide.md': '[x](../../issues)\n' }, /outside the repository/);
   assert.deepEqual(check({ 'README.md': '# Repo\n\n[a](../../issues) [b](../../pulls?q=x) [c](../../security/advisories/new)\n' }), []);
 });
 
-test('5. links: other sites, mailto and links inside code are not checked here', () => {
+test('6. links: other sites, mailto and links inside code are not checked here', () => {
   assert.deepEqual(check({
     'README.md': '# Repo\n\n[a](https://example.com/x.md) [m](mailto:a@example.com) `[b](MISSING.md)`\n\n```md\n[c](MISSING.md)\n```\n',
   }), []);
 });
 
-test('5. links: issue forms link to existing files and headings of this repository', () => {
-  fails({ '.github/ISSUE_TEMPLATE/config.yml': 'contact_links:\n  - url: https://github.com/someone/repo/blob/main/CONTRIBUTING.md#first-steps\n' },
+test('6. links: issue forms link to existing files and headings of this repository, not of pacocartones/.github', () => {
+  fails({ ...FORMS, '.github/ISSUE_TEMPLATE/config.yml': 'contact_links:\n  - url: https://github.com/someone/repo/blob/main/CONTRIBUTING.md#first-steps\n' },
     /config\.yml:2: CONTRIBUTING\.md has no heading for #first-steps/);
-  fails({ '.github/ISSUE_TEMPLATE/bug.yml': 'labels: [bug]\ndescription: Read https://github.com/someone/repo/blob/main/GONE.md first.\n' },
+  fails({ ...FORMS, '.github/ISSUE_TEMPLATE/bug.yml': 'type: Bug\ndescription: Read https://github.com/someone/repo/blob/main/GONE.md first.\n' },
     /bug\.yml:2: links to GONE\.md, which does not exist/);
+  // FORMS links to SUPPORT.md of pacocartones/.github, which this repository does not have.
+  assert.deepEqual(check(FORMS), []);
 });
 
 test('anchors follow GitHub: lowercase, punctuation dropped, spaces to hyphens, repeats numbered', () => {

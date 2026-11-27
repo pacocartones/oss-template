@@ -45,7 +45,7 @@ under a separate Emeritus section.
 
 ## Code of Conduct
 
-[Code of Conduct](./CODE_OF_CONDUCT.md) violations are handled by the maintainer, through
+[Code of Conduct](https://github.com/pacocartones/.github/blob/main/CODE_OF_CONDUCT.md) violations are handled by the maintainer, through
 the contact the Code of Conduct gives.
 
 ## Security Response Team

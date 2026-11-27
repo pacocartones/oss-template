@@ -2,15 +2,19 @@
 # Set up a repository created with "Use this template". Run it once from the new clone,
 # and again whenever you like: every step converges to the same state (idempotent).
 #
-# Usage: scripts/bootstrap.sh [--dry-run] [--repo owner/name] [--prune-labels] [--bot-app-id ID]
+# Usage: scripts/bootstrap.sh [--dry-run] [--repo owner/name] [--prune-labels] [--bot-app-id ID] [--own-forms]
 #   --dry-run       print what would change; read-only calls only
 #   --repo          target repository (default: the current clone's GitHub repository)
 #   --prune-labels  delete labels missing from .github/labels.tsv, but only those on no issue or PR
 #   --bot-app-id    numeric id of a GitHub App allowed to bypass the "main merge gate" ruleset
 #                   (never "main integrity")
+#   --own-forms     copy the issue forms and config.yml of pacocartones/.github main into
+#                   .github/ISSUE_TEMPLATE/, for a repository that needs forms of its own.
+#                   Without it the repository has none and inherits them; with any form or
+#                   config.yml of its own, it inherits none of them.
 #
 # Steps:
-#   1. rewrite the template's own name in .github/ISSUE_TEMPLATE/config.yml and package*.json
+#   1. rewrite the template's own name in package*.json; with --own-forms, copy the forms
 #   2. sync labels from .github/labels.tsv
 #   3. create or update the rulesets "main integrity" and "main merge gate"
 #   4. enable private vulnerability reporting, secret scanning, push protection,
@@ -22,15 +26,17 @@
 set -uo pipefail
 
 TEMPLATE_REPO="pacocartones/oss-template"
+UPSTREAM_URL="https://github.com/pacocartones/.github"
 root="$(cd "$(dirname "$0")/.." && pwd)"
-dry=0; repo=""; prune=0; bot_app_id=""
+dry=0; repo=""; prune=0; bot_app_id=""; own_forms=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) dry=1 ;;
     --repo) repo="${2:-}"; shift ;;
     --prune-labels) prune=1 ;;
     --bot-app-id) bot_app_id="${2:-}"; shift ;;
-    -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --own-forms) own_forms=1 ;;
+    -h|--help) awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
   shift
@@ -58,24 +64,44 @@ do_it() {
 
 say "Repository: $repo$([ "$dry" -eq 1 ] && echo ' (dry run: nothing changes)')"
 
-# 1. Template name ------------------------------------------------------------
-say ""; say "== 1. Template name"
+# 1. Template name and issue forms --------------------------------------------
+say ""; say "== 1. Template name and issue forms"
 if [ "$repo" = "$TEMPLATE_REPO" ]; then
   say "skip  this is the template itself"
 else
   name="${repo#*/}"
   changed=0
-  for f in .github/ISSUE_TEMPLATE/config.yml package.json package-lock.json; do
+  for f in package.json package-lock.json; do
     p="$root/$f"
     [ -f "$p" ] || continue
-    if grep -qF "$TEMPLATE_REPO" "$p" || grep -q '"name": "oss-template"' "$p"; then
+    if grep -q '"name": "oss-template"' "$p"; then
       changed=1
-      do_it "rewrite the template name in $f" sed -i.bak -e "s#$TEMPLATE_REPO#$repo#g" -e "s#\"name\": \"oss-template\"#\"name\": \"$name\"#g" "$p" \
+      do_it "rewrite the template name in $f" sed -i.bak -e "s#\"name\": \"oss-template\"#\"name\": \"$name\"#g" "$p" \
         && rm -f "$p.bak"
     fi
   done
   [ "$changed" -eq 0 ] && say "ok    already rewritten"
   [ "$changed" -eq 1 ] && manual+=("Commit the rewritten files (git diff) in a pull request.")
+  forms="$root/.github/ISSUE_TEMPLATE"
+  if [ -e "$forms" ]; then
+    say "ok    .github/ISSUE_TEMPLATE/ is the repository's own: it replaces every form inherited from pacocartones/.github"
+  elif [ "$own_forms" -eq 0 ]; then
+    say "ok    no forms of its own: GitHub shows those of pacocartones/.github (rerun with --own-forms to copy them here)"
+  else
+    # Read with git, as the pinned-workflow check below: no API call, nothing written outside $forms.
+    copy_forms() {
+      local tmp; tmp="$(mktemp -d)" || return 1
+      git -C "$tmp" init -q && git -C "$tmp" fetch -q --depth 1 "$UPSTREAM_URL" refs/heads/main \
+        && git -C "$tmp" archive FETCH_HEAD .github/ISSUE_TEMPLATE | tar -x -C "$root"
+      local rc=$?
+      rm -rf "$tmp"
+      [ "$rc" -eq 0 ] || rm -rf "$forms"
+      return "$rc"
+    }
+    if do_it "copy the issue forms of pacocartones/.github main into .github/ISSUE_TEMPLATE/" copy_forms; then
+      manual+=("Commit .github/ISSUE_TEMPLATE/ in a pull request; from now on change the forms here, as pacocartones/.github's no longer apply. Copy the rows and notices of the forms from pacocartones/.github's THIRD_PARTY.md into THIRD_PARTY.md.")
+    fi
+  fi
 fi
 
 # 2. Labels -------------------------------------------------------------------

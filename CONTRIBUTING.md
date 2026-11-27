@@ -51,4 +51,4 @@ Maintainers merge one pull request at a time. The merge gate does not require a 
 
 A file that a script or a bot produces is never edited or committed by hand: change its source and let the generator write it, in CI or with the command its header names. Each generated file starts with a line saying which command writes it.
 
-By contributing you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md) and to license your contribution under the [MIT License](LICENSE). How decisions are made: [GOVERNANCE.md](GOVERNANCE.md).
+By contributing you agree to follow the [Code of Conduct](https://github.com/pacocartones/.github/blob/main/CODE_OF_CONDUCT.md) and to license your contribution under the [MIT License](LICENSE). How decisions are made: [GOVERNANCE.md](GOVERNANCE.md).
