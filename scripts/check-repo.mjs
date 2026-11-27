@@ -26,9 +26,15 @@ export function anchors(markdown) {
   const seen = new Map();
   const out = new Set();
   for (const line of withoutCode(markdown, false)) {
-    const m = line.match(/^#{1,6}\s+(.*?)\s*#*\s*$/);
+    const m = line.match(/^#{1,6}[ \t]/);
     if (!m) continue;
-    const text = m[1].replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/<[^>]+>/g, '');
+    let text = line.slice(m[0].length).trim();
+    // A closing sequence of #s is not part of the heading (plain string work, no backtracking regex).
+    let end = text.length;
+    while (end > 0 && text[end - 1] === '#') end--;
+    if (end < text.length && (end === 0 || text[end - 1] === ' ' || text[end - 1] === '\t')) text = text.slice(0, end).trim();
+    // Link text stays and the target goes; anything else that is not a letter, digit, space, _ or - is dropped below.
+    text = text.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
     const base = text.toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').trim().replace(/\s/g, '-');
     const n = seen.get(base) ?? 0;
     seen.set(base, n + 1);
@@ -124,7 +130,9 @@ export function checkRepo(root) {
   };
   for (const file of markdownFiles(root)) {
     withoutCode(read(file)).forEach((line, i) => {
-      for (const [, target] of line.matchAll(/\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g)) {
+      for (const [, raw] of line.matchAll(/\]\(([^)]*)\)/g)) {
+        const target = raw.trim().split(/\s/)[0].replace(/^<|>$/g, ''); // drops an optional "title" and <...>
+        if (!target) continue;
         if (/^[a-z][a-z0-9+.-]*:/i.test(target)) continue; // https:, mailto:, ...
         const where = `${file}:${i + 1}`;
         const [pathPart, fragment = ''] = target.split('#');
