@@ -26,7 +26,7 @@ You need [`gh`](https://cli.github.com/) (logged in, admin on the new repository
    ```
 
    Add `--prune-labels` to delete GitHub's default labels that are outside the standard (only unused ones are deleted).
-5. **Do the manual steps it prints**: move the reusable workflows' pinned SHA if `pacocartones/.github` has moved on, write the project's README, list the maintainers in `GOVERNANCE.md`, set the CodeQL language, add the project's checks to `package.json`, and a few settings.
+5. **Do the manual steps it prints**: move the reusable workflows' pinned SHA if `pacocartones/.github` has moved on, write the project's README, list the maintainers in `MAINTAINERS.md`, set the CodeQL language, add the project's checks to `package.json`, and a few settings.
 6. **Commit on a branch and open a pull request.** The four checks (verify, commit policy, PR description, CodeQL) must pass before it merges.
 
    ```bash
@@ -52,12 +52,13 @@ Each fact is written once, in the file below; everything else links to it.
 |---|---|
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How a change gets in: claiming, good first issue criteria, response target, review |
 | [`AI_POLICY.md`](AI_POLICY.md) | What we ask of AI-assisted contributions |
-| [`GOVERNANCE.md`](GOVERNANCE.md) | Maintainers and how decisions are made |
+| [`GOVERNANCE.md`](GOVERNANCE.md) | How decisions are made |
+| [`MAINTAINERS.md`](MAINTAINERS.md) | Who the maintainers are |
 | [`SECURITY.md`](SECURITY.md) | Private reporting and scope |
 | [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | Expected behavior and enforcement |
 | [`LICENSE`](LICENSE) | MIT, copyright holder |
-| [`.github/labels.tsv`](.github/labels.tsv) | The shared label standard |
-| [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/) | Bug, data/content correction, feature, proposal and good first issue (maintainers) forms |
+| [`.github/labels.tsv`](.github/labels.tsv) | The shared label standard (labels v2: the kind of work is the issue type, not a label) |
+| [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/) | One form per issue type (Bug, Feature, Docs, Data, Task), each setting `type:` and no labels |
 | [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) | What a pull request reports |
 | [`changes/unreleased/README.md`](changes/unreleased/README.md) | The changelog fragment format |
 | [`RELEASING.md`](RELEASING.md) | SemVer, tags and how fragments become `CHANGELOG.md` |

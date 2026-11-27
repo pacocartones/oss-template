@@ -1,25 +1,16 @@
-# AI policy
+# AI Policy
 
-**Contributions made with the help of AI are welcome here.** Use whatever tools help you: coding assistants, chat models, agents, translation. We would rather you send a useful change with help than not send it at all.
-
-What we ask for is the same thing we ask of every contribution: **good human judgement.**
-
-## What we ask
-
-- **Understand what you send.** Read the change before you open the pull request, and be ready to explain it and answer review questions in your own words.
-- **Test it.** Run the project's checks locally (see [CONTRIBUTING.md](CONTRIBUTING.md)) and say what you ran.
-- **Check facts at the source.** AI tools can invent numbers, links and quotes. Every claim must come from a source you opened yourself.
-- **Own the change.** You are responsible for what you submit, whoever or whatever helped write it. Keep pull requests focused: one change, one reason.
-- **Keep secrets out.** Don't paste API keys, private data or anything confidential into AI tools.
-
-## Telling us is optional
-
-You don't have to tell us you used AI, and it never counts against you. If you'd like to, there is a checkbox in the pull request template; it helps reviewers know where to look more carefully. Every pull request is reviewed on its merits, by the same standard. Your commits may keep the trailers your tools add; the rule for maintainer commits is in [CONTRIBUTING.md](CONTRIBUTING.md#commits).
+*Own text, informed by the AI policies of the [Linux kernel](https://docs.kernel.org/process/coding-assistants.html), [Ansible](https://docs.ansible.com/projects/ansible/13/community/ai_policy.html), [OpenShadingLanguage](https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/blob/main/docs/dev/AI_Policy.md) and LLVM (as collected in [melissawm/open-source-ai-contribution-policies](https://github.com/melissawm/open-source-ai-contribution-policies)). No text is copied from them.*
 
 ## How we work
 
-We maintain this project with the help of AI agents too, under human oversight. A human maintainer reviews and is responsible for every merge. Automated review comments are advisory; a person makes the call.
+Most changes in this project are drafted by AI agent sessions. A named human maintainer (see MAINTAINERS.md) reviews every pull request, and only a human merges. Our own commits carry no AI trailer or footer.
 
-## What we will close
+## Contributions from outside
 
-The same things we would close from anyone: changes nobody seems to have read or run, invented sources or data, or pull requests that ignore the issue they claim to fix. If that happens, we'll say why, and you're welcome to try again.
+- AI assistance is allowed.
+- Say so: add `Assisted-by: <tool>/<model>` to the commit message, and tick the line in the pull request template.
+- You are the author. Understand every line, run the checks, and be ready to explain the change in review.
+- An AI tool never signs off (`Signed-off-by`) or appears as a co-author; only people do.
+- Issues labelled `good first issue` are kept for people learning the project; please do not solve them with an agent.
+- Maintainers may close a pull request that is undisclosed, unreviewed or not understood by its author.
