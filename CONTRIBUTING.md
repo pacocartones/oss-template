@@ -45,4 +45,10 @@ We aim to answer new issues, pull requests and claim requests within 3 business 
 
 A human maintainer reviews and is responsible for every merge; automated review comments are advisory. Every review conversation is resolved before merging, by a change or a note saying why not. Contributions are voluntary; requests for payment get no reply.
 
+Maintainers merge one pull request at a time. The merge gate does not require a branch to be up to date with `main`, so two pull requests that pass on their own can still break `main` together: after a merge, update the next pull request from `main` and wait for its checks before merging it.
+
+## Generated files
+
+A file that a script or a bot produces is never edited or committed by hand: change its source and let the generator write it, in CI or with the command its header names. Each generated file starts with a line saying which command writes it.
+
 By contributing you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md) and to license your contribution under the [MIT License](LICENSE). How decisions are made: [GOVERNANCE.md](GOVERNANCE.md).

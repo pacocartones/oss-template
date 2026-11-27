@@ -3,14 +3,16 @@ name: Commit policy
 # Thin caller: the logic lives in pacocartones/.github (docs: its README, "commit-policy").
 # It checks only the new commits of a pull request: maintainer identity, no AI
 # attribution on maintainer commits, and branch names of in-repository branches.
+# The pr-description job below rejects an AI footer in a maintainer pull request's description.
 #
-# Pinning: @main is a placeholder that runs whatever is on main today. Replace it
-# with a full commit SHA, keeping the branch and date as a comment:
+# Pinning: a full commit SHA of pacocartones/.github, with the branch and the day it was
+# read as a comment. All three callers use the same SHA (scripts/workflows.test.mjs).
+# A SHA cannot move; to take a newer one, in a pull request so CI runs on it:
 #   git ls-remote https://github.com/pacocartones/.github refs/heads/main
-#   uses: pacocartones/.github/.github/workflows/commit-policy.yml@<40-char sha> # main YYYY-MM-DD
-# A SHA cannot move; take a newer one in a pull request so CI runs on it.
 on:
   pull_request:
+    # edited: a changed description is checked again.
+    types: [opened, edited, synchronize, reopened]
 
 permissions: {}
 
@@ -19,4 +21,29 @@ jobs:
   commit-policy:
     permissions:
       contents: read
-    uses: pacocartones/.github/.github/workflows/commit-policy.yml@main
+    uses: pacocartones/.github/.github/workflows/commit-policy.yml@df9998c0cce73d34b42a10062a803240b6937f9b # main 2026-11-27
+
+  # Mirrors the second step of free-llm-api-hub's commit-policy.yml. The check name
+  # "PR description" is required (scripts/bootstrap.sh); a pull request by anyone else skips
+  # the job, which counts as passing. Once the reusable workflow above checks descriptions
+  # itself, delete this job and its required check name, and rerun scripts/bootstrap.sh.
+  pr-description:
+    name: PR description
+    if: ${{ github.event.pull_request.user.login == 'pacocartones' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      # The body goes through env, never into the script.
+      - name: Check the description of a maintainer pull request
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ai_pattern='generated (with|by) \[?(claude|chatgpt|copilot|codex|gemini|cursor|an? ai)|co-authored-by:[[:space:]]*(claude|gpt|chatgpt|copilot|codebuff|gemini|cursor|aider|devin|codex|anthropic|openai|agent:)'
+          if printf '%s\n' "${PR_BODY:-}" | grep -Eiq "$ai_pattern"; then
+            echo "::error title=AI footer in the pull request description::Remove the AI footer (Generated with/by ..., or an AI co-author line) from the pull request description; editing it reruns this check."
+            exit 1
+          fi
+          echo "pull request description: ok"
